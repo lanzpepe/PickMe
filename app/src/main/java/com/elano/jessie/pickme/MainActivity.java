@@ -14,9 +14,9 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_GALLERY = 1;
-    private static final String IMAGE_SHARE = "key-image-share";
     private ImageView mIvImageHolder;
     private Button mBtnShare;
+    private Uri uri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,18 +31,9 @@ public class MainActivity extends AppCompatActivity {
         mBtnShare = (Button) findViewById(R.id.btnShare);
     }
 
-    public void share(View view) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_SEND);
-        intent.setType("image/*");
-        intent.putExtra(Intent.EXTRA_TEXT, IMAGE_SHARE);
-        startActivity(Intent.createChooser(intent, "Share this on"));
-    }
-
     public void select(View view) {
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select image from"), REQUEST_CODE_GALLERY);
     }
 
@@ -51,16 +42,18 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_GALLERY && data != null) {
-            Uri uri = data.getData();
-
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
-                mIvImageHolder.setImageBitmap(bitmap);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            uri = data.getData();
+            mIvImageHolder.setImageURI(uri);
             mIvImageHolder.setOnClickListener(null);
             mBtnShare.setVisibility(View.VISIBLE);
         }
+    }
+
+    public void share(View view) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("image/*");
+        intent.setData(uri);
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        startActivity(Intent.createChooser(intent, "Share this on"));
     }
 }
